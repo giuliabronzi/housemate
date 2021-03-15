@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+<p>Click to <a href="{{ url_for('index') }}">return to the main page</a>.</p>
+
+<h1>Submit a listing</h1>
+
+
+<form method="post" action="{{url_for('formecho')}}">
+<p><label>Username:
+    <input required type="text" name="user" size="50" placeholder="Wendy123"></label></p>
+
+<p><label>Title for listing:
+    <input required type="text" name="listingTitle" size="50" placeholder="ex: 2 bedroom apt in the heart of boston."></label></p>
+    
+<p><label>City:
+    <input required type="text" name="city" size="50" placeholder="Wellesley"></label></p>
+
+<p><label>State:
+        <select required name="state">
+            <option value="">choose</option>
+            <option>MA</option>
+            <option>NY</option>
+            <option>CA</option>
+            <option>FL</option>
+        </select>
+</label></p>
+
+<p><label>Number of available rooms:
+    <input required type="int" name="roomNum" size="50" placeholder="3"></label></p>
+
+<p><label>Number of roommates:
+    <input required type="int" required name="roommatesNum" placeholder="2"></label></p>
+
+<p><label>Price per month:
+    <input required type="int" required name="price" placeholder="1500"></label></p>
+
+<p><label>Date listing is available:
+    <input required type="text" required name="openDate" placeholder="June 1"></label></p>
+<p><label>Date subleasers must move out by:
+    <input required type="text" required name="closeDate" placeholder="August 31"></label></p>
+
+
+<p><label>Square footage of room:
+    <input required type="int" required name="sqrft" placeholder="200"></label></p>
+
+<p><label>Number of bathrooms:
+    <input required type="float" required name="bath" placeholder="1.5"></label></p>
+    
+<p><label>Room/House Description:
+    <textarea required name="description" rows="3" cols="50" placeholder="Describe the available room, house, or apartment."></textarea>
+</label></p>
+
+<p><label>Nearby schools:
+    <textarea required name="schools" rows="3" cols="50" placeholder="Which schools are nearby this listing?"></textarea>
+</label></p>
+
+<h3>Contact Information</h3>
+<p><label>Email:
+    <input required type="text" required name="email" placeholder="Wendy123@wellesley.edu"></label></p>
+</label></p>
+<p><label>Phone:
+    <input required type="text" required name="phone" placeholder="305 555 1234"></label></p>
+</label></p>
+
+<p><input type="submit" value="Submit Listing">
+</form>
+
+{% endblock %}
