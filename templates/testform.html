@@ -8,11 +8,14 @@
 
 <form method="post" action="{{url_for('formecho')}}">
 <p><label>Username:
-    <input required type="text" name="user" size="50" placeholder="Wendy123"></label></p>
+    <input required type="text" name="username" size="50" placeholder="Wendy123"></label></p>
 
 <p><label>Title for listing:
     <input required type="text" name="listingTitle" size="50" placeholder="ex: 2 bedroom apt in the heart of boston."></label></p>
-    
+      
+<p><label>Address:
+    <input required type="text" name="address" size="50" placeholder="123 Rd"></label></p>
+         
 <p><label>City:
     <input required type="text" name="city" size="50" placeholder="Wellesley"></label></p>
 
@@ -27,32 +30,33 @@
 </label></p>
 
 <p><label>Number of available rooms:
-    <input required type="int" name="roomNum" size="50" placeholder="3"></label></p>
+    <input required type="int" name="bedroomNum" size="50" placeholder="3"></label></p>
 
 <p><label>Number of roommates:
     <input required type="int" required name="roommatesNum" placeholder="2"></label></p>
 
+<p><label>Number of bathrooms:
+    <input required type="float" required name="bathroomNum" placeholder="1.5"></label></p>
+
+<p><label>Square footage of room:
+    <input required type="int" required name="sqrft" placeholder="200"></label></p>
+    
 <p><label>Price per month:
     <input required type="int" required name="price" placeholder="1500"></label></p>
 
 <p><label>Date listing is available:
-    <input required type="text" required name="openDate" placeholder="June 1"></label></p>
+    <input required type="text" required name="openDate" placeholder="YYYY-MM-DD"></label></p>
+
 <p><label>Date subleasers must move out by:
-    <input required type="text" required name="closeDate" placeholder="August 31"></label></p>
+    <input required type="text" required name="closeDate" placeholder="YYYY-MM-DD"></label></p>
 
 
-<p><label>Square footage of room:
-    <input required type="int" required name="sqrft" placeholder="200"></label></p>
-
-<p><label>Number of bathrooms:
-    <input required type="float" required name="bath" placeholder="1.5"></label></p>
-    
 <p><label>Room/House Description:
     <textarea required name="description" rows="3" cols="50" placeholder="Describe the available room, house, or apartment."></textarea>
 </label></p>
 
 <p><label>Nearby schools:
-    <textarea required name="schools" rows="3" cols="50" placeholder="Which schools are nearby this listing?"></textarea>
+    <textarea required name="nearbySchools" rows="3" cols="50" placeholder="Which schools are nearby this listing?"></textarea>
 </label></p>
 
 <h3>Contact Information</h3>

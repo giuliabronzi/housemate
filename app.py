@@ -66,7 +66,7 @@ def testform():
 @app.before_first_request
 def init_db():
     dbi.cache_cnf()
-    dbi.use('wmdb') # or whatever db
+    dbi.use('housemate_db') 
 
 if __name__ == '__main__':
     import sys, os
