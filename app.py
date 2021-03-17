@@ -10,6 +10,9 @@ import cs304dbi as dbi
 # import cs304dbi_sqlite3 as dbi
 
 import random
+#import details 
+import modules
+
 
 app.secret_key = 'your secret here'
 # replace that with a random key
@@ -25,42 +28,26 @@ app.config['TRAP_BAD_REQUEST_ERRORS'] = True
 def index():
     return render_template('main.html',title='Hello')
 
-@app.route('/greet/', methods=["GET", "POST"])
-def greet():
+@app.route('/listing/<int:hId>', methods=["GET", "POST"])
+def listing():
     if request.method == 'GET':
-        return render_template('greet.html', title='Customized Greeting')
+        return render_template('listing.html', title='Customized Greeting')
     else:
-        try:
-            username = request.form['username'] # throws error if there's trouble
-            flash('form submission successful')
-            return render_template('greet.html',
-                                   title='Welcome '+username,
-                                   name=username)
+        return redirect
 
-        except Exception as err:
-            flash('form submission error'+str(err))
-            return redirect( url_for('index') )
-
-@app.route('/formecho/', methods=['GET','POST'])
-def formecho():
+@app.route('/submitListing/', methods=['GET','POST'])
+def submitListing():
     if request.method == 'GET':
-        return render_template('form_data.html',
-                               method=request.method,
-                               form_data=request.args)
-    elif request.method == 'POST':
-        return render_template('form_data.html',
-                               method=request.method,
-                               form_data=request.form)
-    else:
-        # maybe PUT?
-        return render_template('form_data.html',
-                               method=request.method,
-                               form_data={})
+        return render_template('submitListing.html')
+    else: 
+        #hId = request.forms.get('hId')
+        # add for each 
+        modules.insertListing(conn, address, listingTitle, username,
+                             price, city, state, bedroomNum, roommatesNum, bathroomNum, sqrft, 
+                             area, nearbySchools, openDate, closeDate, description, availability)
+        return render_template('submitListing.html')
+        # return redirect(url_for('listing', hId = hId))
 
-@app.route('/testform/')
-def testform():
-    # these forms go to the formecho route
-    return render_template('testform.html')
 
 
 @app.before_first_request

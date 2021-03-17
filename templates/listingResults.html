@@ -2,7 +2,14 @@
 
 {% block main_content %}
 <h1>Listings that fit your search:</h1>
-
-<p>For a greeting by name, visit this <a href="{{ url_for('greet') }}">greeting</a> page.</p>
+<article>
+    <ol>
+        {% for house in listing %}
+    <li>
+        <a href='../nm/{{person.nm}}'>{{person.name}} born on {{person.birthdate}}</a>
+    </li>
+    {% endfor %}
+    </ol>
+</article>
 
 {% endblock %}
