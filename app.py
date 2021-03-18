@@ -37,16 +37,34 @@ def listing():
 
 @app.route('/submitListing/', methods=['GET','POST'])
 def submitListing():
+    conn = dbi.connect()
     if request.method == 'GET':
         return render_template('submitListing.html')
     else: 
-        #hId = request.forms.get('hId')
-        # add for each 
+        address = request.form.get('address')
+        listingTitle = request.form.get('listingTitle')
+        username = request.form.get('username')
+        price = request.form.get('price')
+        city = request.form.get('city')
+        state = request.form.get('state')
+        bedroomNum = request.form.get('bedroomNum')
+        roommatesNum = request.form.get('roommatesNum')
+        bathroomNum = request.form.get('bathroomNum')
+        sqrft = request.form.get('sqrft')
+        area = request.form.get('area')
+        nearbySchools = request.form.get('nearbySchools')
+        openDate = request.form.get('openDate')
+        closeDate = request.form.get('closeDate')
+        description = request.form.get('description')
+        availability = request.form.get('availability')
+
         modules.insertListing(conn, address, listingTitle, username,
                              price, city, state, bedroomNum, roommatesNum, bathroomNum, sqrft, 
                              area, nearbySchools, openDate, closeDate, description, availability)
         return render_template('submitListing.html')
-        # return redirect(url_for('listing', hId = hId))
+
+        #not sure if this is exactly right but something like this
+        # return redirect(url_for('listing', hId = select_inserted_id()))
 
 
 
