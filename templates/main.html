@@ -1,8 +1,25 @@
 {% extends "base.html" %}
 
 {% block main_content %}
-<h1>Hello!</h1>
+<h1>Search for a place below!</h1>
 
-<p>For a greeting by name, visit this greeting</a> page.</p>
+<form method="POST" action=''></form>
+<p><label>State:
+    <select required name="state">
+        <option value="">choose</option>
+        <option>MA</option>
+        <option>NY</option>
+        <option>CA</option>
+        <option>FL</option>
+    </select>
+</label></p>
 
+<p><label>City:
+    <input required type="text" name="city" size="50" placeholder="Wellesley"></label></p>
+
+<p><label>Number of available rooms:
+    <input required type="int" name="bedroomNum" size="50" placeholder="3"></label></p>
+
+<p><input type="submit" value="Search">
+</form>
 {% endblock %}

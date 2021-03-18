@@ -1,12 +1,14 @@
 {% extends "base.html" %}
+{% extends "main.html" %}
 
 {% block main_content %}
 <h1>Listings that fit your search:</h1>
+
 <article>
     <ol>
-        {% for house in listing %}
+        {% for house in listings %}
     <li>
-        <a href='../nm/{{person.nm}}'>{{person.name}} born on {{person.birthdate}}</a>
+        <a href='../listing/{{int:hId}}'>{{house.description}}}</a>
     </li>
     {% endfor %}
     </ol>

@@ -66,7 +66,18 @@ def submitListing():
         #not sure if this is exactly right but something like this
         # return redirect(url_for('listing', hId = select_inserted_id()))
 
-
+@app.route('/search/', methods=['GET'])
+def search():
+    conn = dbi.connect()
+    curs = dbi.dict_cursor(conn)
+    state = request.args.get('state')
+    city = request.args.get('city')
+    bedroomNum = request.args.get('bedroomNum')
+    matches = searchListings(conn, city, state, bedroomNum)
+    if len(matches) == 1:     
+        return render_template('listing.html', variables...)
+    else:
+        return render_template('listingResults.html', listings = matches)
 
 @app.before_first_request
 def init_db():

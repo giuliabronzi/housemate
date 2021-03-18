@@ -16,3 +16,9 @@ def insertListing(conn, address, listingTitle, username,
                              area, nearbySchools, openDate, closeDate, description, availability])
     conn.commit() 
 
+def searchListings(conn, city, state, bedroomNum):
+        """Retrieves listings that match searched criteria"""
+        curs.execute('''select city, state, bedroomNum, description from 
+        listing where city = %s and state = %s and bedroomNum = %s''',
+        [city, state, bedroomNum])
+        return curs.fetchall()
