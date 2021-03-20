@@ -1,16 +1,17 @@
+<!-- home page for housemate, shows search form -->
+
 {% extends "base.html" %}
 
 {% block main_content %}
 <h1>Search for a place below!</h1>
 
-<form method="POST" action=''></form>
+<form class="search" method="GET" action="/search/">
 <p><label>State:
     <select required name="state">
-        <option value="">choose</option>
-        <option>MA</option>
-        <option>NY</option>
-        <option>CA</option>
-        <option>FL</option>
+        <option value="">Choose One</option>
+        {% for state in states%}
+        <option> {{state.state}}</option>
+        {%endfor%}
     </select>
 </label></p>
 
@@ -18,7 +19,7 @@
     <input required type="text" name="city" size="50" placeholder="Wellesley"></label></p>
 
 <p><label>Number of available rooms:
-    <input required type="int" name="bedroomNum" size="50" placeholder="3"></label></p>
+    <input required type="number" name="bedroomNum" size="50" placeholder="3"></label></p>
 
 <p><input type="submit" value="Search">
 </form>

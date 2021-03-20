@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+
 {% extends "main.html" %}
 
 {% block main_content %}
@@ -8,7 +8,7 @@
     <ol>
         {% for house in listings %}
     <li>
-        <a href='../listing/{{int:hId}}'>{{house.description}}}</a>
+        <a href='../listing/{{house.hId}}'>{{house.description}}</a>
     </li>
     {% endfor %}
     </ol>

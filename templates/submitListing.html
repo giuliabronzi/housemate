@@ -1,3 +1,4 @@
+<!-- form for submitting a listing -->
 {% extends "base.html" %}
 
 {% block main_content %}
@@ -21,11 +22,10 @@
 
 <p><label>State:
         <select required name="state">
-            <option value="">choose</option>
-            <option>MA</option>
-            <option>NY</option>
-            <option>CA</option>
-            <option>FL</option>
+            <option value="">Choose One</option>
+            {% for state in stateCodes%}
+            <option> {{state}}</option>
+            {%endfor%}
         </select>
 </label></p>
 
