@@ -1,0 +1,436 @@
+from flask import (Flask, render_template, make_response, url_for, request,
+                   redirect, flash, session, send_from_directory, jsonify)
+from werkzeug.utils import secure_filename
+app = Flask(__name__)
+
+# one or the other of these. Defaults to MySQL (PyMySQL)
+# change comment characters to switch to SQLite
+
+import cs304dbi as dbi
+# import cs304dbi_sqlite3 as dbi
+
+import random
+import modules
+conn = dbi.connect()
+
+app.secret_key = 'your secret here'
+# replace that with a random key
+app.secret_key = ''.join([ random.choice(('ABCDEFGHIJKLMNOPQRSTUVXYZ' +
+                                          'abcdefghijklmnopqrstuvxyz' +
+                                          '0123456789'))
+                           for i in range(20) ])
+
+# This gets us better error messages for certain common request errors
+app.config['TRAP_BAD_REQUEST_ERRORS'] = True
+
+
+# route for home page
+@app.route('/')
+def index():
+    states = modules.listStatesWithListings(conn)
+    return render_template('main.html', states = states)
+
+# route for listing page specified by house ID
+@app.route('/listing/<int:hId>')
+def listing(hId):
+    house = modules.get_details(conn, hId)
+    return render_template('listing.html', 
+        address = house['address'], listingTitle = house['listingTitle'], 
+        username = house['username'], price = house['price'], 
+        city = house['city'], state = house['state'], 
+        bedroomNum  = house['bedroomNum'], roommatesNum = house['roommatesNum'],
+        bathroomNum = house['bathroomNum'], sqrft = house['sqrft'], 
+        area = house['area'], nearbySchools = house['nearbySchools'],
+        openDate = house['openDate'], closeDate = house['closeDate'], 
+        description = house['description'], availability = house['availability'])
+
+
+# route for submiting a listing
+@app.route('/submitListing/', methods=['GET','POST'])
+def submitListing():
+    conn = dbi.connect()
+    #renders form if get
+    if request.method == 'GET':
+        stateCodes = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", 
+                  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
+                  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
+                  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
+                  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
+
+        return render_template('submitListing.html', stateCodes = stateCodes)
+    #otherwise adds inserted data into listing table
+    else: 
+        address = request.form.get('address')
+        listingTitle = request.form.get('listingTitle')
+        username = request.form.get('username')
+        price = request.form.get('price')
+        city = request.form.get('city')
+        state = request.form.get('state')
+        bedroomNum = request.form.get('bedroomNum')
+        roommatesNum = request.form.get('roommatesNum')
+        bathroomNum = request.form.get('bathroomNum')
+        sqrft = request.form.get('sqrft')
+        area = request.form.get('area')
+        nearbySchools = request.form.get('nearbySchools')
+        openDate = request.form.get('openDate')
+        closeDate = request.form.get('closeDate')
+        description = request.form.get('description')
+        availability = request.form.get('availability')
+
+        modules.insertListing(conn, address, listingTitle, username,
+                             price, city, state, bedroomNum, roommatesNum, bathroomNum, sqrft, 
+                             area, nearbySchools, openDate, closeDate, description, availability)
+        flash("Listing successfully submitted!")
+        return render_template('submitListing.html')
+
+
+# route for searching for a listing
+# currently only using the details for state, city, and number of bedrooms
+@app.route('/search/', methods=['GET'])
+def search():
+    state = request.args.get('state')
+    city = request.args.get('city')
+    bedroomNum = request.args.get('bedroomNum')
+    matches = modules.searchListings(conn, city, state, bedroomNum)
+
+    #goes straight to listing page if only one matching result
+    if len(matches) == 1:     
+        return redirect(url_for('listing', hId = matches[0]['hId']))
+    #goes to list if more than one result
+    elif len(matches) > 1:
+        return render_template('listingResults.html', listings = matches)
+    else:
+        flash("No listings fit your search criteria")
+        states = modules.listStatesWithListings(conn)
+        return render_template('main.html', states = states)
+
+@app.before_first_request
+def init_db():
+    dbi.cache_cnf()
+    dbi.use('housemate_db') 
+
+if __name__ == '__main__':
+    import sys, os
+    if len(sys.argv) > 1:
+        # arg, if any, is the desired port number
+        port = int(sys.argv[1])
+        assert(port>1024)
+    else:
+        port = os.getuid()
+    app.debug = True
+    app.run('0.0.0.0',port)# modules for app.py
+
+import cs304dbi as dbi
+
+
+def get_details(conn, hId):
+    '''Returns the lisiting details as a list of dictionaries.'''
+    curs = dbi.dict_cursor(conn)
+    curs.execute('''select * from listing where hId = %s;''',[hId])
+    return curs.fetchone()
+    
+
+def insertListing(conn, address, listingTitle, username,
+                             price, city, state, bedroomNum, roommatesNum, bathroomNum, sqrft, 
+                             area, nearbySchools, openDate, closeDate, description, availability):
+    '''Inserts  new listing to the table '''
+    curs = dbi.dict_cursor(conn)
+    curs.execute('''Insert into listing(address, listingTitle, username, price, 
+                    city, state, bedroomNum, roommatesNum, bathroomNum, sqrft, area,
+                    nearbySchools, openDate, closeDate, description, availability) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                            %s, %s, %s, %s)''', [address, listingTitle, username,
+                             price, city, state, bedroomNum, roommatesNum, bathroomNum, sqrft, 
+                             area, nearbySchools, openDate, closeDate, description, availability])
+    conn.commit() 
+
+def searchListings(conn, city, state, bedroomNum):
+        """Retrieves listings that match searched criteria"""
+        curs = dbi.dict_cursor(conn)
+        curs.execute('''select hId, city, state, bedroomNum, description from 
+        listing where city like %s and state = %s and bedroomNum = %s''',
+        [city, state, bedroomNum])
+        return curs.fetchall()
+
+
+def listStatesWithListings(conn):
+    """ Returns the state's of the available listing for
+        the drop down menu in the search form"""
+    curs = dbi.dict_cursor(conn)
+    curs.execute('''select distinct state from listing ''')
+    return curs.fetchall()
+/* the --color-header and others are CSS variables, which we access later. 
+*/
+
+HTML {
+    --color-header: #007ea9;  /* color for H1-H6 and others. was deepskyblue but poor contrast. */
+    --color-hilite: #b50000;  /* was red, but this avoids WAVE contrast errors */ 
+    --color-focus: #56B929;
+    --font-family: Verdana;
+    font-family: var(--font-family)
+}
+
+/* For flashed messages; make them stand out using red and italics */
+
+#messages {
+    color: var(--color-hilite);
+    font-style: italic;
+}
+
+
+h1 {
+    font-size: 200%;
+    color: var(--color-header);
+}
+
+h2, h3 {
+    color: var(--color-header);
+}
+    
+
+/* for a simple navbar. Talk to Scott if you want drop-downs. */
+nav > ul {
+    display: flex;
+    flex-direction: row;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+nav > ul > li {
+    flex: 0 0 auto;
+    width: 15em; 
+}
+
+nav button, nav a {
+    display: block;
+    box-sizing: border-box; /* easier to make button and A the same size */
+    width: 100%;
+    height: 40px;
+    padding: 0px;
+    padding-bottom: 5px;
+    background-color: var(--color-header); /* was #3498db */
+    border: 2px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    /* Firefox uses font -apple-system unless I repeat the font spec here. */
+    font-family: var(--font-family);
+    font-weight: bold;
+    font-size: 1.4rem;
+}
+
+/* Only the top-level buttons are centered; lower ones are left-aligned. */
+nav > ul > li > button , nav > ul > li > a {
+    text-align: center;
+}
+
+/* because of the margin trick, this can only be used for the last element */
+
+nav li.right {
+    margin-left: auto;
+}
+
+nav button:hover, button:focus, nav a:hover, nav a:focus {
+    background-color: var(--color-focus);
+}
+
+<!-- base html file for housemate's draft -->
+
+<!doctype html>
+<html lang='en'>
+<head>
+    <meta charset='utf-8'>
+    <!-- for mobile-friendly pages -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name=author content="">
+    <title>{{ page_title }}</title>
+    <link rel='stylesheet' href="{{url_for('static', filename = 'style.css')}}">
+    {% block head_stuff %} {% endblock %}
+</head>
+<body>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div id="messages">
+  {% for msg in messages %}
+  <p>{{msg}}</p>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+            
+{% block nav %}
+<nav>
+  <ul>
+    <li><a href="{{url_for('index')}}">Home</a></li>
+    <li><a href="{{url_for('submitListing')}}">Submit Listing</a></li>
+  </ul>
+</nav>
+{% endblock %}
+
+{% block main_content %}
+<h1>Welcome!</h1>
+{% endblock %}
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  {% block end_scripts %}
+  {% endblock %}
+  
+</body>
+</html>
+{% extends "main.html" %}
+
+{% block main_content %}
+<h1>Error: {{error}}</h1>
+
+{% endblock %}{% extends "base.html" %}
+
+<!-- 
+    Author: Housemate
+    The page displays the result of the search/listing for a specific house
+-->
+
+{% block main_content %}
+<!doctype html>
+<html>
+<section class="listing">
+    <h1 class="title"> {{ listingTitle }} {{ (hId) }} listed by {{ username }}</h1>
+    <p> Located in {{ city }}, {{ state }}. Very close to {{ nearbySchools }}.</p>
+</section>
+
+<section class="description">
+    <p> 
+        {{ description }}
+    </p>
+    <p>
+        There are {{ bedroomNum }} rooms available ({{ sqrft }} square feet) with {{ bathroomNum }} bathrooms. 
+        You will be living with {{ roommatesNum }} other people.
+    </p>
+    <p>
+        Available from {{ openDate }} until {{ closeDate }}. ${{ price }} monthly.
+    </p>
+    <p>
+        <!-- need to implement conctact info-->
+        If interested, contact through email or phone.
+    </p>
+</section>
+
+</html>
+{% endblock %}
+{% extends "main.html" %}
+
+{% block main_content %}
+<h1>Listings that fit your search:</h1>
+
+<article>
+    <ol>
+        {% for house in listings %}
+    <li>
+        <a href='../listing/{{house.hId}}'>{{house.description}}</a>
+    </li>
+    {% endfor %}
+    </ol>
+</article>
+
+{% endblock %}<!-- home page for housemate, shows search form -->
+
+{% extends "base.html" %}
+
+{% block main_content %}
+<h1>Search for a place below!</h1>
+
+<form class="search" method="GET" action="/search/">
+<p><label>State:
+    <select required name="state">
+        <option value="">Choose One</option>
+        {% for state in states%}
+        <option> {{state.state}}</option>
+        {%endfor%}
+    </select>
+</label></p>
+
+<p><label>City:
+    <input required type="text" name="city" size="50" placeholder="Wellesley"></label></p>
+
+<p><label>Number of available rooms:
+    <input required type="number" name="bedroomNum" size="50" placeholder="3"></label></p>
+
+<p><input type="submit" value="Search">
+</form>
+{% endblock %}
+<!-- form for submitting a listing -->
+{% extends "base.html" %}
+
+{% block main_content %}
+<p>Click to <a href="{{ url_for('index') }}">return to the main page</a>.</p>
+
+<h1>Submit a listing</h1>
+
+
+<form method="POST" action=''>
+<p><label>Username:
+    <input required type="text" name="username" size="50" placeholder="Wendy123"></label></p>
+
+<p><label>Title for listing:
+    <input required type="text" name="listingTitle" size="50" placeholder="ex: 2 bedroom apt in the heart of boston."></label></p>
+      
+<p><label>Address:
+    <input required type="text" name="address" size="50" placeholder="123 Rd"></label></p>
+         
+<p><label>City:
+    <input required type="text" name="city" size="50" placeholder="Wellesley"></label></p>
+
+<p><label>State:
+        <select required name="state">
+            <option value="">Choose One</option>
+            {% for state in stateCodes%}
+            <option> {{state}}</option>
+            {%endfor%}
+        </select>
+</label></p>
+
+<p><label>Number of available rooms:
+    <input required type="int" name="bedroomNum" size="50" placeholder="3"></label></p>
+
+<p><label>Number of roommates:
+    <input required type="int" required name="roommatesNum" placeholder="2"></label></p>
+
+<p><label>Number of bathrooms:
+    <input required type="float" required name="bathroomNum" placeholder="1.5"></label></p>
+
+<p><label>Square footage of room:
+    <input required type="int" required name="sqrft" placeholder="200"></label></p>
+    
+<p><label>Price per month:
+    <input required type="int" required name="price" placeholder="1500"></label></p>
+
+<p><label>Date listing is available:
+    <input required type="text" required name="openDate" placeholder="YYYY-MM-DD"></label></p>
+
+<p><label>Date subleasers must move out by:
+    <input required type="text" required name="closeDate" placeholder="YYYY-MM-DD"></label></p>
+
+
+<p><label>Room/House Description:
+    <textarea required name="description" rows="3" cols="50" placeholder="Describe the available room, house, or apartment."></textarea>
+</label></p>
+
+<p><label>Nearby schools:
+    <textarea required name="nearbySchools" rows="3" cols="50" placeholder="Which schools are nearby this listing?"></textarea>
+</label></p>
+
+<h3>Contact Information</h3>
+<p><label>Email:
+    <input required type="text" required name="email" placeholder="Wendy123@wellesley.edu"></label></p>
+</label></p>
+<p><label>Phone:
+    <input required type="text" required name="phone" placeholder="305 555 1234"></label></p>
+</label></p>
+
+<p><input type="submit" value="Submit Listing">
+</form>
+
+{% endblock %}
